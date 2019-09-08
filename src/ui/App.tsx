@@ -10,6 +10,7 @@ export interface IAppState {
 }
 
 class App extends React.Component<{}, IAppState> {
+  private canvasRef = React.createRef<HTMLCanvasElement>();
   state: IAppState = {
     snapshot: undefined,
     isRunning: false,
@@ -30,6 +31,9 @@ class App extends React.Component<{}, IAppState> {
     this.emu.start(buffer, (snap: ISnapshot) => {
       this.setState({ snapshot: snap });
     });
+
+    this.clearCanvas();
+    this.drawCanvas();
   };
 
   stop = () => {
@@ -38,6 +42,29 @@ class App extends React.Component<{}, IAppState> {
       isRunning: false,
       file: undefined,
     });
+
+    this.clearCanvas();
+  };
+
+  clearCanvas = () => {
+    const canvas =
+      this.canvasRef.current && this.canvasRef.current.getContext('2d');
+    if (!canvas) {
+      return;
+    }
+    canvas.clearRect(0, 0, 64, 32);
+  };
+
+  drawCanvas = () => {
+    const canvas = this.canvasRef.current;
+    const ctx = canvas && canvas.getContext('2d');
+    if (!canvas || !ctx) {
+      return;
+    }
+
+    ctx.rect(0, 0, 64, 32);
+    ctx.fillStyle = '#000000';
+    ctx.fill();
   };
 
   render() {
@@ -56,6 +83,7 @@ class App extends React.Component<{}, IAppState> {
           />
         </div>
         {snapshot && <Registers {...snapshot.registers} />}
+        <canvas ref={this.canvasRef} width="64px" height="32px" />
       </div>
     );
   }
