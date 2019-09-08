@@ -2,6 +2,8 @@ import React from 'react';
 import { ISnapshot, Chip8emu } from '../emu/Chip8emu';
 import { RomLoader } from './components/RomLoader';
 import { Registers } from './components/Registers';
+import { Memory } from './components/Memory';
+import { VideoMemory } from './components/VideoMemory';
 
 export interface IAppState {
   snapshot: ISnapshot | undefined;
@@ -17,14 +19,6 @@ class App extends React.Component<{}, IAppState> {
     file: undefined,
   };
   private emu: Chip8emu = new Chip8emu();
-
-  handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (this.state.isRunning) {
-      this.stop();
-      return;
-    }
-  };
 
   start = (file: File, buffer: ArrayBuffer) => {
     this.setState({ file: file, isRunning: true });
@@ -82,7 +76,13 @@ class App extends React.Component<{}, IAppState> {
             onStop={this.stop}
           />
         </div>
-        {snapshot && <Registers {...snapshot.registers} />}
+        {snapshot && (
+          <div style={{ width: '50%' }}>
+            <Registers {...snapshot.registers} />
+            <Memory memory={snapshot.memory} />
+            <VideoMemory memory={snapshot.videoMemory} />
+          </div>
+        )}
         <canvas ref={this.canvasRef} width="64px" height="32px" />
       </div>
     );

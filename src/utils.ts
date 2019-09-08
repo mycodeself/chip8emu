@@ -6,5 +6,11 @@ export const toHex = (buffer: ArrayBuffer) => {
   return res;
 };
 
+export const numberToHex = (num: number): string => {
+  const h = '0123456789ABCDEF';
+
+  return h[num >> 4] + h[num & 15];
+};
+
 export const sleep = (milliseconds: number) =>
   new Promise(resolve => setTimeout(resolve, milliseconds));

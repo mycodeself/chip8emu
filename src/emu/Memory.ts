@@ -26,6 +26,7 @@ import { fontset } from './fontset';
 +---------------+= 0x000 (0) Start of Chip-8 RAM
  */
 export class Memory {
+  public static readonly SIZE = 4096;
   bytes: Uint8Array;
   constructor() {
     this.bytes = new Uint8Array(4096);

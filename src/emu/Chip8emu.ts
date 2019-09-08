@@ -91,7 +91,7 @@ export class Chip8emu {
     this.isRunning = true;
 
     while (this.isRunning) {
-      await sleep(100);
+      await sleep(1000);
       const opcode = this.memory.getOpcode(this.registers.pc);
       console.log(`Executing opcode: ${opcode.toString(16)}`);
       this.executeOpcode(opcode);
