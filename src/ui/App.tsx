@@ -4,6 +4,8 @@ import { RomLoader } from './components/RomLoader';
 import { Registers } from './components/Registers';
 import { Memory } from './components/Memory';
 import { VideoMemory } from './components/VideoMemory';
+import { Display } from './Display';
+import { IWorkerMessage } from '../serviceWorker';
 
 export interface IAppState {
   snapshot: ISnapshot | undefined;
@@ -12,7 +14,6 @@ export interface IAppState {
 }
 
 class App extends React.Component<{}, IAppState> {
-  private canvasRef = React.createRef<HTMLCanvasElement>();
   state: IAppState = {
     snapshot: undefined,
     isRunning: false,
@@ -21,13 +22,10 @@ class App extends React.Component<{}, IAppState> {
   private emu: Chip8emu = new Chip8emu();
 
   start = (file: File, buffer: ArrayBuffer) => {
-    this.setState({ file: file, isRunning: true });
+    this.setState({ isRunning: true, file });
     this.emu.start(buffer, (snap: ISnapshot) => {
       this.setState({ snapshot: snap });
     });
-
-    this.clearCanvas();
-    this.drawCanvas();
   };
 
   stop = () => {
@@ -36,54 +34,33 @@ class App extends React.Component<{}, IAppState> {
       isRunning: false,
       file: undefined,
     });
-
-    this.clearCanvas();
-  };
-
-  clearCanvas = () => {
-    const canvas =
-      this.canvasRef.current && this.canvasRef.current.getContext('2d');
-    if (!canvas) {
-      return;
-    }
-    canvas.clearRect(0, 0, 64, 32);
-  };
-
-  drawCanvas = () => {
-    const canvas = this.canvasRef.current;
-    const ctx = canvas && canvas.getContext('2d');
-    if (!canvas || !ctx) {
-      return;
-    }
-
-    ctx.rect(0, 0, 64, 32);
-    ctx.fillStyle = '#000000';
-    ctx.fill();
   };
 
   render() {
     const { snapshot, isRunning, file } = this.state;
     return (
-      <div
-        style={{ display: 'flex', flexDirection: 'column', padding: '1.5em' }}
-      >
+      <div style={{ textAlign: 'center' }}>
         <h1>Chip8 emulator</h1>
-        {isRunning && <h3>Running ROM {file!.name}</h3>}
-        <div>
-          <RomLoader
-            isRunning={isRunning}
-            onLoad={this.start}
-            onStop={this.stop}
-          />
-        </div>
-        {snapshot && (
-          <div style={{ width: '50%' }}>
-            <Registers {...snapshot.registers} />
-            <Memory memory={snapshot.memory} />
-            <VideoMemory memory={snapshot.videoMemory} />
+        {isRunning && <h3>{`Running ${file!.name} ROM`}</h3>}
+        {isRunning && snapshot && <Display memory={snapshot.videoMemory} />}
+        <div
+          style={{ display: 'flex', flexDirection: 'column', padding: '1.5em' }}
+        >
+          <div>
+            <RomLoader
+              isRunning={isRunning}
+              onLoad={this.start}
+              onStop={this.stop}
+            />
           </div>
-        )}
-        <canvas ref={this.canvasRef} width="64px" height="32px" />
+          {isRunning && snapshot && (
+            <div style={{ width: '50%' }}>
+              <Registers {...snapshot.registers} />
+              <Memory memory={snapshot.memory} />
+              <VideoMemory memory={snapshot.videoMemory} />
+            </div>
+          )}
+        </div>
       </div>
     );
   }

@@ -4,7 +4,7 @@ import { fontset } from './fontset';
 import { Keyboard } from './Keyboard';
 import { Memory } from './Memory';
 import { Stack } from './Stack';
-import { Video } from './Video';
+import { VideoMemory } from './VideoMemory';
 
 export interface IRegisters {
   pc: number; // program counter
@@ -28,10 +28,11 @@ export class Chip8emu {
   private stack: Stack;
   private memory: Memory;
   private keyboard: Keyboard;
-  private video: Video;
+  private video: VideoMemory;
   private debugger: Debugger | undefined;
   isRunning: boolean;
   shouldRender: boolean;
+  private intervalId?: number;
   private onIteration?: (snap: ISnapshot) => void;
 
   constructor() {
@@ -45,7 +46,7 @@ export class Chip8emu {
     this.stack = new Stack();
     this.memory = new Memory();
     this.keyboard = new Keyboard();
-    this.video = new Video();
+    this.video = new VideoMemory();
     this.isRunning = false;
     this.shouldRender = false;
   }
@@ -64,6 +65,10 @@ export class Chip8emu {
   stop = () => {
     this.isRunning = false;
     this.keyboard.removeListener();
+    if (this.intervalId) {
+      window.cancelAnimationFrame(this.intervalId);
+      //clearInterval(this.intervalId);
+    }
   };
 
   getSnapshot = (): ISnapshot => ({
@@ -72,7 +77,7 @@ export class Chip8emu {
     sp: this.stack.sp,
     memory: this.memory.bytes,
     keys: this.keyboard.keys,
-    videoMemory: this.video.memory,
+    videoMemory: this.video.bytes,
   });
 
   private initialize = () => {
@@ -83,30 +88,34 @@ export class Chip8emu {
       dt: 0,
       st: 0,
     };
+
     this.keyboard.registerListener();
+    this.video.clear();
     this.stack.reset();
   };
 
-  private loop = async () => {
+  private async loop() {
     this.isRunning = true;
+    this.intervalId = window.requestAnimationFrame(this.step);
+  }
 
-    while (this.isRunning) {
-      await sleep(1000);
-      const opcode = this.memory.getOpcode(this.registers.pc);
-      console.log(`Executing opcode: ${opcode.toString(16)}`);
-      this.executeOpcode(opcode);
-      this.updateTimers();
-      if (this.onIteration) {
-        this.onIteration(this.getSnapshot());
-      }
+  private step = () => {
+    const opcode = this.memory.getOpcode(this.registers.pc);
+    this.executeOpcode(opcode);
+    this.updateTimers();
+    if (this.onIteration) {
+      this.onIteration(this.getSnapshot());
+    }
+    if (this.debugger) {
+      this.debugger.addSnapshot(this.getSnapshot());
+    }
 
-      if (this.debugger) {
-        this.debugger.addSnapshot(this.getSnapshot());
-      }
+    if (this.isRunning) {
+      window.requestAnimationFrame(this.step);
     }
   };
 
-  private updateTimers = () => {
+  private updateTimers() {
     if (this.registers.dt > 0) {
       this.registers.dt -= 1;
     }
@@ -118,7 +127,7 @@ export class Chip8emu {
 
       this.registers.st -= 1;
     }
-  };
+  }
 
   private incrementPC = () => {
     this.registers.pc += 2;
@@ -238,8 +247,16 @@ export class Chip8emu {
         let pixelErased = false;
         for (let i = 0; i < n; i++) {
           const byte = this.memory.bytes[this.registers.i + i];
-          pixelErased = this.video.drawLine(vx, vy, byte);
+          for (let j = 0; j < 8; j++) {
+            if ((byte & (0x80 >> j)) != 0) {
+              pixelErased = this.video.togglePixel(vx + j, vy + i);
+            }
+          }
         }
+        // for (let i = 0; i < n; i++) {
+        //   const byte = this.memory.bytes[this.registers.i + i];
+        //   pixelErased = this.video.drawLine(vx, vy, byte);
+        // }
         this.registers.v[0xf] = pixelErased ? 1 : 0;
         this.shouldRender = true;
         0x00e0;
@@ -315,7 +332,7 @@ export class Chip8emu {
         break;
       case 0x0006:
         // 8xy6 - SHR Vx {, Vy} => Set Vx = Vx SHR 1.
-        //console.log('8xy6 - SHR Vx {, Vy} => Set Vx = Vx SHR 1.');
+        console.log('8xy6 - SHR Vx {, Vy} => Set Vx = Vx SHR 1.');
         this.registers.v[0xf] = this.registers.v[x] & 0x1;
         this.registers.v[x] >>= 1;
         break;

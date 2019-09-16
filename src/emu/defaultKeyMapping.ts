@@ -1,50 +1,66 @@
 export const defaultKeyMapping = [
   {
+    key: '1',
     keyCode: 49,
   },
   {
+    key: '2',
     keyCode: 50,
   },
   {
+    key: '3',
     keyCode: 51,
   },
   {
+    key: '4',
     keyCode: 52,
   },
   {
-    keyCode: 113,
+    key: 'q',
+    keyCode: 81,
   },
   {
-    keyCode: 119,
+    key: 'w',
+    keyCode: 87,
   },
   {
-    keyCode: 101,
+    key: 'e',
+    keyCode: 69,
   },
   {
-    keyCode: 114,
+    key: 'r',
+    keyCode: 82,
   },
   {
-    keyCode: 97,
+    key: 'a',
+    keyCode: 65,
   },
   {
-    keyCode: 115,
+    key: 's',
+    keyCode: 83,
   },
   {
-    keyCode: 100,
+    key: 'd',
+    keyCode: 68,
   },
   {
-    keyCode: 102,
+    key: 'f',
+    keyCode: 70,
   },
   {
-    keyCode: 122,
+    key: 'z',
+    keyCode: 90,
   },
   {
-    keyCode: 120,
+    key: 'x',
+    keyCode: 88,
   },
   {
-    keyCode: 99,
+    key: 'c',
+    keyCode: 67,
   },
   {
-    keyCode: 118,
+    key: 'v',
+    keyCode: 86,
   },
 ];
