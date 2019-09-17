@@ -12,16 +12,6 @@ export class Keyboard {
     this.keys = new Array(16);
   };
 
-  push = (keyCode: number) => {
-    const key = defaultKeyMapping.findIndex(val => val.keyCode === keyCode);
-    if (key === -1) {
-      console.error(`Key code not found in mapping ${keyCode}`);
-      return;
-    }
-
-    this.keys[key] = true;
-  };
-
   isPressed = (key: number) => this.keys[key];
 
   waitForKeyDown = async (): Promise<number> => {
@@ -40,13 +30,39 @@ export class Keyboard {
     return keyValues[key];
   };
 
-  registerListener = () =>
-    document.addEventListener('keypress', this.handleKeyDown);
+  registerListener() {
+    document.addEventListener('keydown', this.handleKeyDown);
+    document.addEventListener('keyup', this.handleKeyUp);
+  }
 
-  removeListener = () =>
-    document.removeEventListener('keypress', this.handleKeyDown);
+  removeListener() {
+    document.removeEventListener('keydown', this.handleKeyDown);
+    document.removeEventListener('keyup', this.handleKeyUp);
+  }
+
+  private handleKeyUp = (event: KeyboardEvent) => {
+    const keyCode = event.keyCode;
+    const key = defaultKeyMapping.findIndex(val => val.keyCode === keyCode);
+
+    if (key === -1) {
+      console.error(`Key code not found in mapping ${keyCode}`);
+      return;
+    }
+
+    this.keys[key] = false;
+  };
 
   private handleKeyDown = (event: KeyboardEvent) => {
     this.push(event.keyCode);
   };
+
+  private push(keyCode: number) {
+    const key = defaultKeyMapping.findIndex(val => val.keyCode === keyCode);
+    if (key === -1) {
+      console.error(`Key code not found in mapping ${keyCode}`);
+      return;
+    }
+
+    this.keys[key] = true;
+  }
 }
